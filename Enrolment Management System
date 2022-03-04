@@ -1,0 +1,386 @@
+// menu
+
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+
+public class Menu {
+    public void mainMenu() throws FileNotFoundException {
+        school schoolObject = new school();
+        int option = 0;
+        Scanner kb = new Scanner(System.in);
+
+        do {
+            System.out.println("\n \n Virtual Student Management System");
+            System.out.println("==================================");
+            System.out.println("(1) Add New Student \n(2) Delete Student \n(3) Suspend/Unsuspend Student \n(4) Edit Student \n(5) List Student by Subjects \n(6) List Suspend Students \n(7) List All Students \n(8) Exit System ");
+            System.out.println("Choose an option:");
+
+            Scanner op = new Scanner(System.in);
+
+            System.out.println("Enter number of the option. Please enter number 1-8.  \n\n");
+
+            option = op.nextInt();
+            switch (option) {
+                case 1:
+                    schoolObject.op1();
+                    System.out.println("\n------------ BACK TO THE MAIN MENU -----------\n");
+                    break;
+                case 2:
+                    schoolObject.op2();
+                    System.out.println("\n------------ BACK TO THE MAIN MENU -----------\n");
+                    break;
+                case 3:
+                    schoolObject.op3();
+                    System.out.println("\n------------ BACK TO THE MAIN MENU -----------\n");
+                    break;
+                case 4:
+                    schoolObject.op4();
+                    System.out.println("\n------------ BACK TO THE MAIN MENU -----------\n");
+                    break;
+                case 5:
+                    schoolObject.op5();
+                    System.out.println("\n------------ BACK TO THE MAIN MENU -----------\n");
+                    break;
+                case 6:
+                    System.out.println("\n------------ BACK TO THE MAIN MENU -----------\n");
+                    break;
+                case 7:
+                    schoolObject.op7();
+                    System.out.println("\n------------ BACK TO THE MAIN MENU -----------\n");
+                    break;
+                case 8:
+                    schoolObject.op8();
+                    System.out.println("Option 8 selected, exiting the system. Thank you!");
+                    break;
+                default:
+                    System.out.println("Unknown option entered please enter an option from 1-8");
+            }
+        } while (option != 8);
+    }
+}
+
+
+//school
+
+import java.io.*;
+import java.util.*;
+
+public class school {
+    StudentsDatabase studentsDatabaseobj = new StudentsDatabase();
+    SubjectsDatabase subjectsDatabaseobj = new SubjectsDatabase();
+    Scanner kb = new Scanner(System.in);
+    int studentId = 1;
+    private String message;
+
+    public school() throws FileNotFoundException {
+    }
+
+    public void writeLinesToFiles(String fileName) throws FileNotFoundException {
+        PrintWriter outputFile = new PrintWriter(fileName);
+        outputFile.println("Writing a message to the file:" + fileName);
+        outputFile.println(message);
+        outputFile.close();
+    }
+
+
+    public void op1() throws FileNotFoundException {
+        Subjects subjectObj = new Subjects();
+        Student studentObj = new Student();
+        System.out.println("Enter a new student name you wish to add:");
+        String enteredName = kb.nextLine();
+        if (studentsDatabaseobj.duplicateStudent(enteredName)) {
+            System.out.println("Duplicate name entered, this student cannot be enrolled");
+        } else {
+            // put a check to see if 'enteredName is already in the arrayList, if its already present, skip adding /show rejection message and go back to main menu'
+            // call line 49  onwards only if it is NOT a duplicate entry. Else skip lines 49- 66 stating its duplicate and send back to main menu
+            studentObj.setStudentName(enteredName); //taking the input from the user and then setting it using the setter method in the next line
+            if ((studentObj.getStudentName().length() == 0) || (studentObj.getStudentName().matches("[a-zA-Z]")))
+                System.out.println("Student name should not be blank and should contain alphabets only.");
+            else
+                System.out.println("A new student has been added. Name: " + studentObj.getStudentName());
+
+            studentObj.setStudentId(studentId); //this will set it to the default value
+            studentId++; // after setting it we now increment the value to 1. so first student has id 1, second student has id 2 etc.
+
+            System.out.println("Below is a list of s available for enrolment.");
+            //studentsSubjectsArrayListobj=subjectsDatabaseobj.showSubjects();
+            studentObj.setSubjectsList(subjectsDatabaseobj.showSubjects());
+            studentsDatabaseobj.studentFiles.add(studentObj);
+            if (studentObj.getStudentSubject() != null) {
+                System.out.println("Subject(s) " + studentObj.getStudentSubject() + "added for student " + studentObj.getStudentName());
+            }
+        }
+    }
+
+    public void op2() {
+        Subjects subjectObj = new Subjects();
+        Student studentObj = new Student();
+        ArrayList<StudentsDatabase> studentDatabaseList;
+        StudentsDatabase studentsDatabase_obj = new StudentsDatabase();
+        System.out.println("To remove an existing student from the database, enter the full name with space in between first and last name.");
+        studentObj.setStudentName(kb.nextLine());
+        if ((studentObj.getStudentName().length() == 0) || (studentObj.getStudentName().matches("[a-zA-Z]")))
+            System.out.println("Student name should not be blank and should contain alphabets only.");
+        else {
+            studentsDatabaseobj.removeFile(studentObj.getStudentName());
+            System.out.println(studentObj.getStudentName() + " has been removed from the student database.");
+        }
+    }
+
+
+    public void op3() {
+        Student studentObj = new Student();
+        // Subjects subjectObj = new Subjects();
+        System.out.println("To find the student's profile, enter a student name to search.");
+        studentObj.setStudentName(kb.nextLine());
+        if ((studentObj.getStudentName().length() == 0) || (studentObj.getStudentName().matches("[a-zA-Z]")))
+            System.out.println("Student name should not be blank and should contain alphabets only.");
+        else {
+            int indexOfSearch = studentsDatabaseobj.option3searchStudent(studentObj.getStudentName());
+            // System.out.println("Student " + studentObj.getStudentName() + "'s status is ready to be edited.");
+            if (indexOfSearch == -1) {
+                //search returned nothing
+                System.out.println("Status cannot be modified because the student is not in the database");
+            } else {
+                System.out.print("Student's current Status has been modified and is now: ");
+                if (studentsDatabaseobj.studentFiles.get(indexOfSearch).getIsStudent()) {
+                    System.out.println("Unsuspended");
+                } else {
+                    System.out.println("Suspended");
+                }
+            }
+
+        }
+    }
+
+    public void op4() throws FileNotFoundException {
+        Student studentObj = new Student();
+        Subjects subjectObj = new Subjects();
+        System.out.println("Enter the name of the student you wish to edit his/hers subject list. ");
+        studentObj.setStudentName(kb.nextLine());
+        if ((studentObj.getStudentName().length() == 0) || (studentObj.getStudentName().matches("[a-zA-Z]")))
+            System.out.println("Student name should not be blank and should contain alphabets only.");
+        else { // name entered to be searched is valid
+            //studentsDatabaseobj.searchStudent(studentObj.getStudentName());
+            int indexOfSearch = studentsDatabaseobj.option3searchStudent(studentObj.getStudentName());
+            if (indexOfSearch == -1) {
+                //search returned nothing
+                System.out.println("Cannot modify subjects for this student because they dont exist in the database");
+            } else {
+                System.out.println("Please select an option");
+                System.out.println("1 : remove subject");
+                System.out.println("2 : add subject");
+                Scanner op = new Scanner(System.in);
+                int optionSelected = op.nextInt();
+                if (optionSelected == 1) {
+                    //remove subject code
+                    System.out.println("Enter the subject to be deleted");
+                    for (int i = 0; i < studentsDatabaseobj.studentFiles.get(indexOfSearch).getSubjectsList().size(); i++) {
+                        System.out.println((i + 1) + " : " + studentsDatabaseobj.studentFiles.get(indexOfSearch).getSubjectsList().get(i).getSubjectName());
+                    }
+                    Scanner kb = new Scanner(System.in);
+                    int optionToBeDeleted = kb.nextInt();
+                    //assuming they dont mess up the option selected
+                    studentsDatabaseobj.studentFiles.get(indexOfSearch).getSubjectsList().remove(optionToBeDeleted - 1);
+                    System.out.println("subject has been deleted;");
+                    //  studentsDatabaseobj.studentFiles.get(indexOfSearch).getSubjectsList().size()
+                } else {
+                    int existingCreditCount = 0;
+                    for (int i = 0; i < studentsDatabaseobj.studentFiles.get(indexOfSearch).getSubjectsList().size(); i++) {
+                        existingCreditCount = existingCreditCount + studentsDatabaseobj.studentFiles.get(indexOfSearch).getSubjectsList().get(i).getSubjectCredit();
+                    }
+                    studentsDatabaseobj.studentFiles.get(indexOfSearch).setSubjectsList(subjectsDatabaseobj.showSubjects(existingCreditCount));
+                }
+            }
+        }
+    }
+
+
+    public void op5() throws FileNotFoundException {
+        ArrayList<Subjects> subjectSearchList = new ArrayList<>();
+        subjectSearchList = subjectsDatabaseobj.SearchSubjects();
+        int subjectSearchlistSize = subjectSearchList.size();
+
+        for (int i = 0; i < studentsDatabaseobj.studentFiles.size(); i++) {
+            if (studentsDatabaseobj.studentFiles.get(i).getIsStudent() != false) {//that means the student is NOT suspended and we can search. If he's suspended, Ignoring trying to search
+                int studentSubjectListSize = studentsDatabaseobj.studentFiles.get(i).getSubjectsList().size();
+                if (subjectSearchlistSize <= studentSubjectListSize) {
+                    //they have the same number of subject count, we need to search further. if the else case procs, the student is not enrolled for the same number of classes as what is being searched
+                    int searchCounter = 0;
+                    for (int j = 0; j < subjectSearchlistSize; j++) {
+                        if (studentsDatabaseobj.studentFiles.get(i).getSubjectsList().contains(subjectSearchList.get(j))) {
+                            searchCounter++;
+                        }
+                    }
+                    if (searchCounter == subjectSearchlistSize) {
+                        System.out.println(studentsDatabaseobj.studentFiles.get(i).getStudentName());
+                    }
+                }
+            }
+        }
+    }
+
+    public void op6() {
+        System.out.println("Below is a list of all the suspended students.");
+        studentsDatabaseobj.searchSuspendedStudent();
+    }
+
+    public void op7() {
+        System.out.println("Below is a list of all enrolled students.");
+        studentsDatabaseobj.ListAllStudent();
+    }
+
+    public void op8() {
+        try {
+            //https://www.w3schools.com/java/java_files_create.asp
+            FileWriter myWriter = new FileWriter("students.txt");
+            //loop through each studentObject present in the arrayList "studentFiles" within the StudentDatabase object
+            for (int i = 0; i < studentsDatabaseobj.studentFiles.size(); i++) {
+                String subjectData = "";
+                for (int j = 0; j < studentsDatabaseobj.studentFiles.get(i).getSubjectsList().size(); j++) {
+                    subjectData = subjectData + "," + studentsDatabaseobj.studentFiles.get(i).getSubjectsList().get(j).getSubjectName() + "," + studentsDatabaseobj.studentFiles.get(i).getSubjectsList().get(j).getSubjectCredit();
+                }
+                myWriter.write(studentsDatabaseobj.studentFiles.get(i).getStudentName() + "," + studentsDatabaseobj.studentFiles.get(i).getStudentId() + "," + studentsDatabaseobj.studentFiles.get(i).getIsStudent() + subjectData);
+            }
+            myWriter.close();
+            System.out.println("Successfully wrote to the file.");
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+    }
+}
+
+
+// subjectdb
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.InputMismatchException;
+import java.util.Scanner;
+
+public class SubjectsDatabase {
+    public ArrayList<Subjects> masterListsubjectsArrayListobj; //will contain all subjects
+    public ArrayList<Subjects> studentsSubjectsArrayListobj; //will contain only what the student selected
+
+    Scanner kb = new Scanner(System.in);
+    int arrayListSize;
+    int option;
+
+    public SubjectsDatabase() throws FileNotFoundException//default constructor
+    {
+        arrayListSize = 10;
+        option = 0;
+        masterListsubjectsArrayListobj = new ArrayList<Subjects>(arrayListSize);
+        studentsSubjectsArrayListobj = new ArrayList<Subjects>(arrayListSize);
+        populateSubjects();
+    }
+
+    public SubjectsDatabase(int size)//parametrised constructor
+    {
+        arrayListSize = size;// files = new ArrayList<Subjects>(arrayListSize);
+    }
+
+
+    /* the populateSubjects method is used to read a subjects.txt file, parse it line by line and then split each line using the comma/
+    It then takes the subject name and stores it in the subjectName variable of a Subjects object and stores the credit in a subjectCredit Variable .
+    once this subjects
+
+     */
+    public void populateSubjects() throws FileNotFoundException {
+        Scanner parser = new Scanner(new FileReader("C:\\Users\\Amit Raj\\IdeaProjects\\TestForJiayan\\src\\com\\company\\subjects.txt"));
+        while (parser.hasNextLine()) {
+            String subjectDetail = parser.nextLine();
+
+            //System.out.println(subjectDetail);
+            String[] subStrings = subjectDetail.split(","); // we split the string and get two substrings. One string is data before the comma. The second one is the data AFter the comma. [comma isnt included in
+            // any of the substrings]
+            Subjects subjectObj = new Subjects();
+            String subjectName = subStrings[0]; //this is because after the split at the comma, the data before the comma  from the subjectdetail string is the subject name
+            String subjectCredit = subStrings[1]; //this
+            subjectObj.setSubjectCredit(Integer.parseInt(subjectCredit)); //subjectCredit is a string, we convert it to Integer using the Integer.parseInt method
+            subjectObj.setSubjectName(subjectName);
+
+            masterListsubjectsArrayListobj.add(subjectObj);
+        }
+    }
+
+    public ArrayList<Subjects> showSubjects() throws FileNotFoundException {
+        int creditCount = 15;
+        //this loops through each "subject object present in the list"
+        do {
+
+            for (int i = 0; i < masterListsubjectsArrayListobj.size(); i++)
+                System.out.println((i + 1) + " : " + masterListsubjectsArrayListobj.get(i).getSubjectName());
+            Subjects subjectObj = new Subjects();
+            System.out.println("Enter the option number for the subject you wish to enroll for this student. You will be presented with this menu again to enrol for more subjects. \n Or enter 15 to exit");
+            Scanner op = new Scanner(System.in);
+            option = op.nextInt();
+            if ((option <= masterListsubjectsArrayListobj.size() && option >= 1)) {
+                //assumption made here is that option will always be valid. No weird value that is out of bounds.
+                creditCount = creditCount - masterListsubjectsArrayListobj.get(option - 1).getSubjectCredit(); // to keep decreasing credit count
+                if (creditCount >= 0) {
+                    subjectObj.setSubjectName(masterListsubjectsArrayListobj.get(option - 1).getSubjectName());
+                    subjectObj.setSubjectCredit(masterListsubjectsArrayListobj.get(option - 1).getSubjectCredit());
+                    studentsSubjectsArrayListobj.add(subjectObj);
+                } else {
+                    System.out.println("Sorry cant enrol in more subjects because your credit count is beyond 15");
+                    option = 15;
+                }
+            }
+        } while (option != 15);
+        return studentsSubjectsArrayListobj;
+    }
+
+    //method overloading
+    public ArrayList<Subjects> showSubjects(int existingCount) throws FileNotFoundException {
+        int creditCount = 15;
+        //this loops through each "subject object present in the list"
+        do {
+            for (int i = 0; i < masterListsubjectsArrayListobj.size(); i++)
+                System.out.println((i + 1) + " : " + masterListsubjectsArrayListobj.get(i).getSubjectName());
+            Subjects subjectObj = new Subjects();
+            System.out.println("Enter the option number for the subject you wish to enroll for this student. You will be presented with this menu again to enrol for more subjects. \n Or enter 15 to exit");
+            Scanner op = new Scanner(System.in);
+            option = op.nextInt();
+            if ((option <= masterListsubjectsArrayListobj.size() && option >= 1)) {
+                //assumption made here is that option will always be valid. No weird value that is out of bounds.
+                creditCount = creditCount - masterListsubjectsArrayListobj.get(option - 1).getSubjectCredit(); // to keep decreasing credit count
+                if ((creditCount + existingCount) >= 0) {
+                    subjectObj.setSubjectName(masterListsubjectsArrayListobj.get(option - 1).getSubjectName());
+                    subjectObj.setSubjectCredit(masterListsubjectsArrayListobj.get(option - 1).getSubjectCredit());
+                    studentsSubjectsArrayListobj.add(subjectObj);
+                } else {
+                    System.out.println("Sorry cant enrol in more subjects because your credit count is beyond 15");
+                    option = 15;
+                }
+
+            }
+        } while (option != 15);
+        return studentsSubjectsArrayListobj;
+    }
+
+    public ArrayList<Subjects> SearchSubjects() throws FileNotFoundException {
+        //this loops through each "subject object present in the list"
+        do {
+            for (int i = 0; i < masterListsubjectsArrayListobj.size(); i++)
+                System.out.println((i + 1) + " : " + masterListsubjectsArrayListobj.get(i).getSubjectName());
+            Subjects subjectObj = new Subjects();
+            System.out.println("Enter the option number for the subject you wish to search for Or enter 15 to exit");
+            Scanner op = new Scanner(System.in);
+            option = op.nextInt();
+            if ((option <= masterListsubjectsArrayListobj.size() && option >= 1)) {
+                //assumption made here is that option will always be valid. No weird value that is out of bounds.
+                subjectObj.setSubjectName(masterListsubjectsArrayListobj.get(option - 1).getSubjectName());
+                subjectObj.setSubjectCredit(masterListsubjectsArrayListobj.get(option - 1).getSubjectCredit());
+                studentsSubjectsArrayListobj.add(subjectObj);
+            }
+        } while (option != 15);
+        return studentsSubjectsArrayListobj;
+    }
+}
+
+
+
+
+
